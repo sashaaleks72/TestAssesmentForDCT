@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAssesmentForDCT", "TestAssesmentForDCT\TestAssesmentForDCT.csproj", "{1242880C-1ADF-4FC8-B193-76C168707CA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAssesmentForDCT", "TestAssesmentForDCT\TestAssesmentForDCT.csproj", "{1242880C-1ADF-4FC8-B193-76C168707CA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAssesmentForDCT.TestEnv", "TestAssesmentForDCT.TestEnv\TestAssesmentForDCT.TestEnv.csproj", "{673E481E-D16D-48B3-AD70-2B882FD88C03}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{1242880C-1ADF-4FC8-B193-76C168707CA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1242880C-1ADF-4FC8-B193-76C168707CA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1242880C-1ADF-4FC8-B193-76C168707CA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{673E481E-D16D-48B3-AD70-2B882FD88C03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{673E481E-D16D-48B3-AD70-2B882FD88C03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{673E481E-D16D-48B3-AD70-2B882FD88C03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{673E481E-D16D-48B3-AD70-2B882FD88C03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
