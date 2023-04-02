@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using TestAssesmentForDCT.Models;
 using TestAssesmentForDCT.TestEnv.Models;
 
 public class Program
@@ -7,30 +8,65 @@ public class Program
 
     public static async Task Main(string[] args)
     {
-        await GetAssetsList(limit: 10, offset: 0);
+        await GetAssetsListAsync(limit: 10, offset: 0);
+        await GetAssetByIdAsync("bitcoin");
+        await GetExchangesAsync();
     }
 
-    public static async Task GetAssetsList(int? limit, int? offset)
+    public static async Task<List<Asset>?> GetAssetsListAsync(int? limit, int? offset)
     {
+        BaseResponse<List<Asset>>? assetsResponse = null;
         using var httpClient = new HttpClient { BaseAddress = new Uri(_apiUri) };
 
         var result = await httpClient.GetAsync($"assets?limit={limit}&offset={offset}");
 
-        if (result.IsSuccessStatusCode) 
+        if (result.IsSuccessStatusCode)
         {
             var objToDeserialize = await result.Content.ReadAsStringAsync();
 
-            var assetsResponse = JsonConvert.DeserializeObject<AssetsResponse>(objToDeserialize);
-
-            if (assetsResponse?.Data?.Count != 0)
-            {
-                foreach (var item in assetsResponse!.Data)
-                {
-                    Console.WriteLine($"Id - {item.Id}\nName - {item.Name}\nPrice - {item.Price:0.##}\nVwap - {item.Vwap:0.##}\nSupply - {item.Supply:0.##}\nChange - {item.Change:0.##}\nMarketCap - {item.MarketCap:0.##}\nVolume - {item.Volume:0.##}");
-                }
-            }
+            if (!string.IsNullOrEmpty(objToDeserialize))
+                assetsResponse = JsonConvert.DeserializeObject<BaseResponse<List<Asset>>>(objToDeserialize);
         }
+
+        var assetsList = assetsResponse?.Data;
+        return assetsList;
     }
 
+    public static async Task<Asset?> GetAssetByIdAsync(string id = "bitcoin")
+    {
+        BaseResponse<Asset>? asset = null;
+        using var httpClient = new HttpClient { BaseAddress = new Uri(_apiUri) };
+
+        var result = await httpClient.GetAsync($"assets/{id}");
+
+        if (result.IsSuccessStatusCode)
+        {
+            var objToDeserialize = await result.Content.ReadAsStringAsync();
+
+            if (!string.IsNullOrEmpty(objToDeserialize))
+                asset = JsonConvert.DeserializeObject<BaseResponse<Asset>?>(objToDeserialize);
+        }
+
+        return asset?.Data;
+    }
+
+    public static async Task<List<Exchange>?> GetExchangesAsync()
+    {
+        BaseResponse<List<Exchange>>? exchangesResponse = null;
+        using var httpClient = new HttpClient { BaseAddress = new Uri(_apiUri) };
+
+        var result = await httpClient.GetAsync($"exchanges/");
+
+        if (result.IsSuccessStatusCode)
+        {
+            var objToDeserialize = await result.Content.ReadAsStringAsync();
+
+            if (!string.IsNullOrEmpty(objToDeserialize))
+                exchangesResponse = JsonConvert.DeserializeObject<BaseResponse<List<Exchange>>?>(objToDeserialize);
+        }
+
+        var exchangesList = exchangesResponse?.Data;
+        return exchangesList;
+    }
 }
 

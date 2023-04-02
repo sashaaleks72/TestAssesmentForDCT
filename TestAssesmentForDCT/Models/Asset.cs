@@ -11,20 +11,20 @@ namespace TestAssesmentForDCT.Models
         public string Name { get; set; } = string.Empty;
 
         [JsonProperty("priceUsd")]
-        public double Price { get; set; }
+        public double? Price { get; set; }
 
         [JsonProperty("marketCapUsd")]
-        public double MarketCap { get; set; }
+        public double? MarketCap { get; set; }
 
         [JsonProperty("vwap24Hr")]
-        public double Vwap { get; set; }
+        public double? Vwap { get; set; }
 
-        public double Supply { get; set; }
+        public double? Supply { get; set; }
 
         [JsonProperty("changePercent24Hr")]
-        public double Change { get; set; }
+        public double? Change { get; set; }
 
         [JsonProperty("volumeUsd24Hr")]
-        public double Volume { get; set; }
+        public double? Volume { get; set; }
     }
 }

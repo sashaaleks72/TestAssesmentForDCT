@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using TestAssesmentForDCT.Infrastructure.Commands;
 using TestAssesmentForDCT.Models;
@@ -9,54 +11,81 @@ namespace TestAssesmentForDCT.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
-        private readonly DataService _dataService;
+        private double _frameOpacity;
 
-        private int _limit = 10;
+        private Page _coinsPage;
+        private Page _exchangesPage;
+        private Page _currPage;
 
-        public MainViewModel() 
+        public Page CurrentPage
         {
-            _dataService = new DataService();
-            Assets = new List<Asset>();
-        }
-
-        public int Limit
-        {
-            get { return _limit; }
+            get => _currPage;
             set
-            { 
-                _limit = value; 
+            {
+                _currPage = value;
+                OnPropertyChanged();
+            }
+        }
+        public double FrameOpacity
+        {
+            get => _frameOpacity;
+            set 
+            {
+                _frameOpacity = value;
                 OnPropertyChanged();
             }
         }
 
-        public ICommand RefreshDataCommand
+        public MainViewModel() 
+        { 
+            _coinsPage = new Pages.CoinsPage();
+            _exchangesPage = new Pages.ExchangesPage();
+
+            FrameOpacity = 1;
+
+            _currPage = _coinsPage;
+        }
+
+        public ICommand CoinsBtnClickCommand 
+        { 
+            get
+            {
+                return new DelegateCommand((obj) =>
+                {
+                    Task.Run(() => SlowOpacity(_coinsPage));
+                });
+            }
+        }
+
+        public ICommand ExchangesBtnClickCommand
         {
             get
             {
                 return new DelegateCommand((obj) =>
                 {
-                    var list = Task.Run(async () => await _dataService.GetAssetsListAsync(_limit, 0)).Result;
-
-                    if (list != null)
-                    {
-                        Assets = list;
-                    }
+                    Task.Run(() => SlowOpacity(_exchangesPage));
                 });
             }
         }
 
-        private List<Asset> _assets;
-        public List<Asset> Assets
+        private async Task SlowOpacity(Page page)
         {
-            get
-            {
-                return _assets;
-            }
-            set
-            {
-                _assets = value;
-                OnPropertyChanged();
-            }
+            await Task.Factory.StartNew(() => 
+            { 
+                for (double i = 1.0; i > 0; i -= 0.1)
+                {
+                    FrameOpacity = i;
+                    Thread.Sleep(50);
+                }
+
+                CurrentPage = page;
+
+                for (double i = 0; i <= 1.0; i += 0.1)
+                {
+                    FrameOpacity = i;
+                    Thread.Sleep(50);
+                }
+            });
         }
     }
 }
