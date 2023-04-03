@@ -1,5 +1,4 @@
-﻿using System;
-using TestAssesmentForDCT.Infrastructure.Commands.Base;
+﻿using TestAssesmentForDCT.Infrastructure.Commands.Base;
 
 namespace TestAssesmentForDCT.Infrastructure.Commands
 {

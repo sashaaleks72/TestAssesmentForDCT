@@ -1,29 +1,62 @@
-﻿using TestAssesmentForDCT.Models;
-using TestAssesmentForDCT.Services;
-using TestAssesmentForDCT.ViewModels.Abstractions;
-
+﻿
 namespace TestAssesmentForDCT.ViewModels
 {
     public class DetailCoinView : BaseViewModel
     {
         private readonly CoinService _coinService;
         private Asset _asset;
+        private string _state = string.Empty;
+        private IList<CoinHistory> _points;
+
+        public ICommand RefreshDataCommand 
+        { 
+            get
+            {
+                return new DelegateCommand(async (obj) =>
+                {
+                    State = "Loading...";
+                    var recievedAsset = await Task.Run(async () => await _coinService.GetAssetByIdAsync(Asset.Id));
+
+                    if (recievedAsset != null)
+                    {
+                        var recievedCoinHistory = await Task.Run(async () => await _coinService.GetCoinHistoryListAsync(recievedAsset.Id));
+                        State = string.Empty;
+
+                        if (recievedCoinHistory != null)
+                        {
+                            Asset = recievedAsset;
+                            Points = recievedCoinHistory;
+                        }
+                    }
+                });
+            } 
+        }
 
         public DetailCoinView() 
         {
             _coinService = new CoinService();
-            _asset = new Asset
+            _points = new List<CoinHistory>();
+            _asset = new Asset();
+        }
+
+        public IList<CoinHistory> Points
+        {
+            get => _points;
+            set
             {
-                Rank = 1234,
-                Change = 0.44,
-                MarketCap = 24343,
-                Symbol = "BTC",
-                Name = "Bitcoin",
-                Volume = 2454,
-                Price = 28654.45,
-                Supply = 454545,
-                MaxSupply = 5445599
-            };
+                _points = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string State
+        {
+            get => _state;
+            set
+            {
+                _state = value;
+                OnPropertyChanged();
+            }
         }
 
         public Asset Asset 

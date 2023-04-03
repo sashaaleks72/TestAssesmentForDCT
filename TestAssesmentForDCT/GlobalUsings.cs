@@ -1,5 +1,11 @@
 ﻿global using System;
 global using System.Collections.Generic;
-global using System.Linq;
-global using System.Text;
+global using System.Threading;
 global using System.Threading.Tasks;
+global using System.Windows;
+global using System.Windows.Input;
+global using TestAssesmentForDCT.Infrastructure.Commands;
+global using TestAssesmentForDCT.Models;
+global using TestAssesmentForDCT.Services;
+global using TestAssesmentForDCT.Services.Abstractions;
+global using TestAssesmentForDCT.ViewModels.Abstractions;

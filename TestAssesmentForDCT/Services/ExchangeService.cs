@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Net.Http;
-using TestAssesmentForDCT.Models;
 
 namespace TestAssesmentForDCT.Services
 {

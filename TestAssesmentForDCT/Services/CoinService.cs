@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Net.Http;
-using TestAssesmentForDCT.Models;
 
 namespace TestAssesmentForDCT.Services
 {
@@ -8,12 +7,31 @@ namespace TestAssesmentForDCT.Services
     {
         private const string _apiUri = "https://api.coincap.io/v2/";
 
-        public async Task<List<Asset>?> GetAssetsListAsync(int? limit, int? offset)
+        public async Task<List<CoinHistory>?> GetCoinHistoryListAsync(string coinId)
+        {
+            BaseResponse<List<CoinHistory>>? coinHistoryResponse = null;
+            using var httpClient = new HttpClient { BaseAddress = new Uri(_apiUri) };
+
+            var result = await httpClient.GetAsync($"assets/{coinId}/history?interval=h1");
+
+            if (result.IsSuccessStatusCode)
+            {
+                var objToDeserialize = await result.Content.ReadAsStringAsync();
+
+                if (!string.IsNullOrEmpty(objToDeserialize))
+                    coinHistoryResponse = JsonConvert.DeserializeObject<BaseResponse<List<CoinHistory>>>(objToDeserialize);
+            }
+
+            var coinHistoryList = coinHistoryResponse?.Data;
+            return coinHistoryList;
+        }
+
+        public async Task<List<Asset>?> GetAssetsListAsync(int? limit, int? offset, string? searchWord)
         {
             BaseResponse<List<Asset>>? assetsResponse = null;
             using var httpClient = new HttpClient { BaseAddress = new Uri(_apiUri) };
 
-            var result = await httpClient.GetAsync($"assets?limit={limit}&offset={offset}");
+            var result = await httpClient.GetAsync($"assets?limit={limit}&offset={offset}&search={searchWord}");
 
             if (result.IsSuccessStatusCode)
             {

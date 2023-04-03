@@ -1,6 +1,4 @@
-﻿using System;
-using System.Windows.Input;
-
+﻿
 namespace TestAssesmentForDCT.Infrastructure.Commands.Base
 {
     public abstract class BaseCommand : ICommand

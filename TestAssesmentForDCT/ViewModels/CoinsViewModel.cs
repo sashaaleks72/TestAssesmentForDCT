@@ -1,27 +1,60 @@
-﻿using System.Windows;
-using System.Windows.Input;
-using TestAssesmentForDCT.Infrastructure.Commands;
-using TestAssesmentForDCT.Models;
-using TestAssesmentForDCT.Services;
-using TestAssesmentForDCT.ViewModels.Abstractions;
-using TestAssesmentForDCT.Views.Windows;
-
+﻿
 namespace TestAssesmentForDCT.ViewModels
 {
     public class CoinsViewModel : BaseViewModel
     {
+        private readonly IDialogService _dialogService;
         private readonly CoinService _coinService;
 
         private int _limit = 10;
         private int _page = 0;
         private int? _pagesCount = null;
 
+        private List<Asset> _assets;
         private Asset? _selectedCoin;
+
+        private string _searchWord = string.Empty;
+
+        private string _state = string.Empty;
 
         public CoinsViewModel()
         {
+            _dialogService = new DialogService();
             _coinService = new CoinService();
             _assets = new List<Asset>();
+        }
+
+        public string SearchWord
+        {
+            get => _searchWord;
+            set
+            {
+                _searchWord = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public List<Asset> Assets
+        {
+            get
+            {
+                return _assets;
+            }
+            set
+            {
+                _assets = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string State
+        {
+            get => _state;
+            set
+            {
+                _state = value;
+                OnPropertyChanged();
+            }
         }
 
         public Asset? SelectedCoin
@@ -44,20 +77,20 @@ namespace TestAssesmentForDCT.ViewModels
             }
         }
 
-        private List<Asset>? RecieveCoinsData(int? limit = null, int? offset = null)
+        private async Task<List<Asset>?> RecieveCoinsData(int? limit = null, int? offset = null, string? searchWord = null)
         {
-            var list = Task.Run(async () => await _coinService.GetAssetsListAsync(limit, offset)).Result;
+            var list = await Task.Run(async () => await _coinService.GetAssetsListAsync(limit, offset, searchWord));
             return list;
         }
 
-        private void SetPagesCountToItsProperty()
+        private async Task SetPagesCountToItsProperty()
         {
             bool isEnd = false;
             int? quantityOfAllCoins = 0;
 
             for (int i = 0 ;isEnd != true; i+=100)
             {
-                var data = RecieveCoinsData(100, i);
+                var data = await RecieveCoinsData(100, i);
 
                 if (data == null || data.Count == 0) 
                 {
@@ -78,10 +111,13 @@ namespace TestAssesmentForDCT.ViewModels
         {
             get
             {
-                return new DelegateCommand((obj) =>
+                return new DelegateCommand(async (obj) =>
                 {
                     _page--;
-                    var coinsList = RecieveCoinsData(_limit, _page * _limit);
+
+                    State = "Loading...";
+                    var coinsList = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
+                    State = string.Empty;
 
                     if (coinsList != null)
                     {
@@ -91,11 +127,36 @@ namespace TestAssesmentForDCT.ViewModels
             }
         }
 
+        public ICommand ClearBtnCommand
+        {
+            get
+            {
+                return new DelegateCommand((obj) =>
+                {
+                    SearchWord = string.Empty;
+                });
+            }
+        }
+
         public ICommand FindBtnCommand
         {
             get
             {
-                return new DelegateCommand((obj) => { });
+                return new DelegateCommand(async (obj) => 
+                {
+                    State = "Loading...";
+                    var recievedAssets = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
+
+                    if (recievedAssets != null)
+                    {
+                        await SetPagesCountToItsProperty();
+                        State = string.Empty;
+
+                        _page = 0;
+
+                        Assets = recievedAssets;
+                    }
+                });
             }
         }
 
@@ -103,9 +164,11 @@ namespace TestAssesmentForDCT.ViewModels
         {
             get
             {
-                return new DelegateCommand((obj) =>
+                return new DelegateCommand(async (obj) =>
                 {
-                    var coinsList = RecieveCoinsData(_limit, (_page + 1) * _limit);
+                    State = "Loading...";
+                    var coinsList = await RecieveCoinsData(_limit, (_page + 1) * _limit, _searchWord);
+                    State = string.Empty;
 
                     if (coinsList != null && coinsList.Count != 0)
                     {
@@ -113,7 +176,7 @@ namespace TestAssesmentForDCT.ViewModels
                         Assets = coinsList;
                     }
 
-                }, (obj) => _page < _pagesCount);
+                }, (obj) => _page != _pagesCount);
             }
         }
 
@@ -121,15 +184,26 @@ namespace TestAssesmentForDCT.ViewModels
         {
             get
             {
-                return new DelegateCommand((obj) =>
+                return new DelegateCommand(async (obj) =>
                 {
-                    var recievedAsset = Task.Run(async () => await _coinService.GetAssetByIdAsync(SelectedCoin!.Id)).Result;
+                    State = "Loading...";
+                    var recievedAsset = await Task.Run(async () => await _coinService.GetAssetByIdAsync(SelectedCoin!.Id));
 
                     if (recievedAsset != null)
                     {
-                        //MessageBox.Show($"Id: {recievedAsset.Id}\nName: {recievedAsset.Name}", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
-                        var detailWindow = new DetailCoinWindow();
-                        detailWindow.ShowDialog();
+                        var recievedCoinHistory = await Task.Run(async () => await _coinService.GetCoinHistoryListAsync(recievedAsset.Id));
+                        State = string.Empty;
+
+                        if (recievedCoinHistory != null)
+                        {
+                            var detailViewModel = new DetailCoinView
+                            {
+                                Asset = recievedAsset,
+                                Points = recievedCoinHistory
+                            };
+
+                            _dialogService.ShowDialog("DetailCoinWindow", detailViewModel);
+                        }
                     }
                     
                 }, (obj) => SelectedCoin != null);
@@ -140,12 +214,16 @@ namespace TestAssesmentForDCT.ViewModels
         {
             get
             {
-                return new DelegateCommand((obj) =>
+                return new DelegateCommand(async (obj) =>
                 {
+                    State = "Loading...";
                     if (_pagesCount == null)
-                        SetPagesCountToItsProperty();
+                    {
+                        await SetPagesCountToItsProperty();
+                    }
 
-                    var coinsList = RecieveCoinsData(_limit, _page * _limit);
+                    var coinsList = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
+                    State = string.Empty;
 
                     if (coinsList != null)
                     {
@@ -160,7 +238,7 @@ namespace TestAssesmentForDCT.ViewModels
         {
             get
             {
-                return new DelegateCommand((obj) =>
+                return new DelegateCommand(async (obj) =>
                 {
                     bool canBeChanged = Limit > 0 && Limit <= 50 ? true : false;
 
@@ -170,9 +248,12 @@ namespace TestAssesmentForDCT.ViewModels
                     }
                     else
                     {
-                        SetPagesCountToItsProperty();
+                        State = "Loading...";
+                        await SetPagesCountToItsProperty();
+                        _page = 0;
 
-                        var coinsList = RecieveCoinsData(_limit, 0);
+                        var coinsList = await RecieveCoinsData(_limit, 0, _searchWord);
+                        State = string.Empty;
 
                         if (coinsList != null)
                         {
@@ -182,20 +263,6 @@ namespace TestAssesmentForDCT.ViewModels
                         MessageBox.Show("New limit applied!", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 });
-            }
-        }
-
-        private List<Asset> _assets;
-        public List<Asset> Assets
-        {
-            get
-            {
-                return _assets;
-            }
-            set
-            {
-                _assets = value;
-                OnPropertyChanged();
             }
         }
     }

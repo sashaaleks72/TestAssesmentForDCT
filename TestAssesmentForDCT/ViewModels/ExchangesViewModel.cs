@@ -1,14 +1,10 @@
-﻿using System.Windows.Input;
-using TestAssesmentForDCT.Infrastructure.Commands;
-using TestAssesmentForDCT.Models;
-using TestAssesmentForDCT.Services;
-using TestAssesmentForDCT.ViewModels.Abstractions;
-
+﻿
 namespace TestAssesmentForDCT.ViewModels
 {
     public class ExchangesViewModel : BaseViewModel
     {
         private List<Exchange> _exchanges;
+        private string _state = string.Empty;
         private readonly ExchangeService _exchangeService;
 
         public ExchangesViewModel()
@@ -21,15 +17,27 @@ namespace TestAssesmentForDCT.ViewModels
         {
             get
             {
-                return new DelegateCommand((obj) =>
+                return new DelegateCommand(async (obj) =>
                 {
-                    var list = Task.Run(async () => await _exchangeService.GetExchangesAsync()).Result;
+                    State = "Loading...";
+                    var list = await Task.Run(async () => await _exchangeService.GetExchangesAsync());
+                    State = string.Empty;
 
                     if (list != null)
                     {
                         Exchanges = list;
                     }
                 });
+            }
+        }
+
+        public string State
+        {
+            get => _state;
+            set
+            {
+                _state = value;
+                OnPropertyChanged();
             }
         }
 

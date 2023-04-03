@@ -9,7 +9,11 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:fa="http://schemas.fontawesome.com/icons/"
         mc:Ignorable="d"
-        Title="App" MinHeight="450" MinWidth="850">
+        WindowStartupLocation="CenterScreen"
+        Icon="/Resources/Images/Icons/favicon.ico"
+        Title="CryptoInfoApp" 
+        MinHeight="450" 
+        MinWidth="850">
 
     <Window.DataContext>
         <vm:MainViewModel></vm:MainViewModel>
