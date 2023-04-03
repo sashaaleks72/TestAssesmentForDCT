@@ -21,8 +21,12 @@ namespace TestAssesmentForDCT.Models
 
         public double? Supply { get; set; }
 
+        public double? MaxSupply { get; set; }
+
         [JsonProperty("changePercent24Hr")]
         public double? Change { get; set; }
+
+        public string Symbol { get; set; } = string.Empty;
 
         [JsonProperty("volumeUsd24Hr")]
         public double? Volume { get; set; }

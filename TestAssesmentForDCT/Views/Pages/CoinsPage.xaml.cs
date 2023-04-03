@@ -15,9 +15,6 @@ using System.Windows.Shapes;
 
 namespace TestAssesmentForDCT.Pages
 {
-    /// <summary>
-    /// Interaction logic for CoinsPage.xaml
-    /// </summary>
     public partial class CoinsPage : Page
     {
         public CoinsPage()
