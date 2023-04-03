@@ -26,26 +26,14 @@ namespace TestAssesmentForDCT.ViewModels
             _currPage = _coinsPage;
         }
 
-        public ICommand CoinsBtnClickCommand 
-        { 
-            get
-            {
-                return new DelegateCommand((obj) =>
-                {
-                    CurrentPage = _coinsPage;
-                });
-            }
-        }
-
-        public ICommand ExchangesBtnClickCommand
+        public ICommand CoinsBtnClickCommand => new DelegateCommand((obj) =>
         {
-            get
-            {
-                return new DelegateCommand((obj) =>
-                {
-                    CurrentPage = _exchangesPage;
-                });
-            }
-        }
+            CurrentPage = _coinsPage;
+        });
+
+        public ICommand ExchangesBtnClickCommand => new DelegateCommand((obj) =>
+        {
+            CurrentPage = _exchangesPage;
+        });
     }
 }

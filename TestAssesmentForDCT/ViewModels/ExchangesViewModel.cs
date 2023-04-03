@@ -13,45 +13,28 @@ namespace TestAssesmentForDCT.ViewModels
             _exchanges = new List<Exchange>();
         }
 
-        public ICommand RefreshDataCommand
+        public ICommand RefreshDataCommand => new DelegateCommand(async (obj) =>
         {
-            get
-            {
-                return new DelegateCommand(async (obj) =>
-                {
-                    State = "Loading...";
-                    var list = await Task.Run(async () => await _exchangeService.GetExchangesAsync());
-                    State = string.Empty;
+            State = "Loading...";
+            var list = await Task.Run(async () => await _exchangeService.GetExchangesAsync());
+            State = string.Empty;
 
-                    if (list != null)
-                    {
-                        Exchanges = list;
-                    }
-                });
+            if (list != null)
+            {
+                Exchanges = list;
             }
-        }
+        });
 
         public string State
         {
             get => _state;
-            set
-            {
-                _state = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _state, value);
         }
 
         public List<Exchange> Exchanges
         {
-            get
-            {
-                return _exchanges;
-            }
-            set
-            {
-                _exchanges = value;
-                OnPropertyChanged();
-            }
+            get => _exchanges;
+            set => SetProperty(ref _exchanges, value);
         }
     }
 }

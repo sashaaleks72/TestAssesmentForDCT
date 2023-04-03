@@ -27,54 +27,31 @@ namespace TestAssesmentForDCT.ViewModels
         public string SearchWord
         {
             get => _searchWord;
-            set
-            {
-                _searchWord = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _searchWord, value);
         }
 
         public List<Asset> Assets
         {
-            get
-            {
-                return _assets;
-            }
-            set
-            {
-                _assets = value;
-                OnPropertyChanged();
-            }
+            get => _assets;
+            set => SetProperty(ref _assets, value);
         }
 
         public string State
         {
             get => _state;
-            set
-            {
-                _state = value;
-                OnPropertyChanged();
-            }
+            set => SetProperty(ref _state, value);
         }
 
         public Asset? SelectedCoin
         {
-            get { return _selectedCoin; }
-            set 
-            { 
-                _selectedCoin = value;
-                OnPropertyChanged();
-            }
+            get => _selectedCoin;
+            set => SetProperty(ref _selectedCoin, value);
         }
 
         public int Limit
         {
-            get { return _limit; }
-            set
-            {
-                _limit = value;
-                OnPropertyChanged();
-            }
+            get => _limit;
+            set => SetProperty(ref _limit, value);
         }
 
         private async Task<List<Asset>?> RecieveCoinsData(int? limit = null, int? offset = null, string? searchWord = null)
@@ -107,163 +84,121 @@ namespace TestAssesmentForDCT.ViewModels
             }
         }
 
-        public ICommand PrevBtnCommand
+        public ICommand PrevBtnCommand => new DelegateCommand(async (obj) =>
         {
-            get
+            _page--;
+
+            State = "Loading...";
+            var coinsList = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
+            State = string.Empty;
+
+            if (coinsList != null)
             {
-                return new DelegateCommand(async (obj) =>
-                {
-                    _page--;
-
-                    State = "Loading...";
-                    var coinsList = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
-                    State = string.Empty;
-
-                    if (coinsList != null)
-                    {
-                        Assets = coinsList;
-                    }
-                }, (obj) => _page > 0);
+                Assets = coinsList;
             }
-        }
+        }, (obj) => _page > 0);
 
-        public ICommand ClearBtnCommand
+        public ICommand ClearBtnCommand => new DelegateCommand((obj) =>
         {
-            get
-            {
-                return new DelegateCommand((obj) =>
-                {
-                    SearchWord = string.Empty;
-                });
-            }
-        }
+            SearchWord = string.Empty;
+        });
 
-        public ICommand FindBtnCommand
+        public ICommand FindBtnCommand => new DelegateCommand(async (obj) =>
         {
-            get
+            State = "Loading...";
+            var recievedAssets = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
+
+            if (recievedAssets != null)
             {
-                return new DelegateCommand(async (obj) => 
-                {
-                    State = "Loading...";
-                    var recievedAssets = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
+                await SetPagesCountToItsProperty();
+                State = string.Empty;
 
-                    if (recievedAssets != null)
-                    {
-                        await SetPagesCountToItsProperty();
-                        State = string.Empty;
+                _page = 0;
 
-                        _page = 0;
-
-                        Assets = recievedAssets;
-                    }
-                });
+                Assets = recievedAssets;
             }
-        }
+        });
 
-        public ICommand NextBtnCommand
+        public ICommand NextBtnCommand => new DelegateCommand(async (obj) =>
         {
-            get
+            State = "Loading...";
+            var coinsList = await RecieveCoinsData(_limit, (_page + 1) * _limit, _searchWord);
+            State = string.Empty;
+
+            if (coinsList != null && coinsList.Count != 0)
             {
-                return new DelegateCommand(async (obj) =>
-                {
-                    State = "Loading...";
-                    var coinsList = await RecieveCoinsData(_limit, (_page + 1) * _limit, _searchWord);
-                    State = string.Empty;
-
-                    if (coinsList != null && coinsList.Count != 0)
-                    {
-                        _page++;
-                        Assets = coinsList;
-                    }
-
-                }, (obj) => _page != _pagesCount);
+                _page++;
+                Assets = coinsList;
             }
-        }
 
-        public ICommand ShowBtnCommand
+        }, (obj) => _page != _pagesCount);
+
+        public ICommand ShowBtnCommand => new DelegateCommand(async (obj) =>
         {
-            get
+            State = "Loading...";
+            var recievedAsset = await Task.Run(async () => await _coinService.GetAssetByIdAsync(SelectedCoin!.Id));
+
+            if (recievedAsset != null)
             {
-                return new DelegateCommand(async (obj) =>
+                var recievedCoinHistory = await Task.Run(async () => await _coinService.GetCoinHistoryListAsync(recievedAsset.Id));
+                State = string.Empty;
+
+                if (recievedCoinHistory != null)
                 {
-                    State = "Loading...";
-                    var recievedAsset = await Task.Run(async () => await _coinService.GetAssetByIdAsync(SelectedCoin!.Id));
-
-                    if (recievedAsset != null)
+                    var detailViewModel = new DetailCoinView
                     {
-                        var recievedCoinHistory = await Task.Run(async () => await _coinService.GetCoinHistoryListAsync(recievedAsset.Id));
-                        State = string.Empty;
+                        Asset = recievedAsset,
+                        Points = recievedCoinHistory
+                    };
 
-                        if (recievedCoinHistory != null)
-                        {
-                            var detailViewModel = new DetailCoinView
-                            {
-                                Asset = recievedAsset,
-                                Points = recievedCoinHistory
-                            };
-
-                            _dialogService.ShowDialog("DetailCoinWindow", detailViewModel);
-                        }
-                    }
-                    
-                }, (obj) => SelectedCoin != null);
+                    _dialogService.ShowDialog("DetailCoinWindow", detailViewModel);
+                }
             }
-        }
 
-        public ICommand RefreshDataCommand
+        }, (obj) => SelectedCoin != null);
+
+        public ICommand RefreshDataCommand => new DelegateCommand(async (obj) =>
         {
-            get
+            State = "Loading...";
+            if (_pagesCount == null)
             {
-                return new DelegateCommand(async (obj) =>
-                {
-                    State = "Loading...";
-                    if (_pagesCount == null)
-                    {
-                        await SetPagesCountToItsProperty();
-                    }
-
-                    var coinsList = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
-                    State = string.Empty;
-
-                    if (coinsList != null)
-                    {
-                        Assets = coinsList;
-                    }
-
-                }, (obj) => Limit > 0 && Limit <= 50);
+                await SetPagesCountToItsProperty();
             }
-        }
 
-        public ICommand ApplyBtnCommand
+            var coinsList = await RecieveCoinsData(_limit, _page * _limit, _searchWord);
+            State = string.Empty;
+
+            if (coinsList != null)
+            {
+                Assets = coinsList;
+            }
+
+        }, (obj) => Limit > 0 && Limit <= 50);
+
+        public ICommand ApplyBtnCommand => new DelegateCommand(async (obj) =>
         {
-            get
+            bool canBeChanged = Limit > 0 && Limit <= 50 ? true : false;
+
+            if (!canBeChanged)
             {
-                return new DelegateCommand(async (obj) =>
-                {
-                    bool canBeChanged = Limit > 0 && Limit <= 50 ? true : false;
-
-                    if (!canBeChanged)
-                    {
-                        MessageBox.Show("Value must be more than 0 and less than 51!", "Warning!", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    }
-                    else
-                    {
-                        State = "Loading...";
-                        await SetPagesCountToItsProperty();
-                        _page = 0;
-
-                        var coinsList = await RecieveCoinsData(_limit, 0, _searchWord);
-                        State = string.Empty;
-
-                        if (coinsList != null)
-                        {
-                            Assets = coinsList;
-                        }
-
-                        MessageBox.Show("New limit applied!", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                });
+                MessageBox.Show("Value must be more than 0 and less than 51!", "Warning!", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
-        }
+            else
+            {
+                State = "Loading...";
+                await SetPagesCountToItsProperty();
+                _page = 0;
+
+                var coinsList = await RecieveCoinsData(_limit, 0, _searchWord);
+                State = string.Empty;
+
+                if (coinsList != null)
+                {
+                    Assets = coinsList;
+                }
+
+                MessageBox.Show("New limit applied!", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        });
     }
 }
