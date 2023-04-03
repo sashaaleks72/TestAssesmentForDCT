@@ -1,4 +1,4 @@
-**The application builded with MVVM pattern and supports the following functionality:**
+**The application builded with MVVM pattern usage and supports the following functionality:**
 -	Multi-page navigation.
 -	The main page displays the top N currencies (N variable can be input by user).
 - Toggle pages functionality.
